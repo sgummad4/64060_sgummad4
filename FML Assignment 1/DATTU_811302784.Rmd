@@ -1,0 +1,65 @@
+---
+title: "FML Assignment-1"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+date: "2023-09-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Download
+
+Source file is from kaggle(https://www.kaggle.com/datasets/luiscorter/netflix-original-films-imdb-scores)
+
+# Import
+
+```{r}
+OTT <- read.csv("NetflixOriginals.csv")
+head(OTT)
+```
+```{r}
+summary(OTT$Runtime)
+```
+```{r}
+table(OTT$Genre)
+```
+```{r}
+table(OTT$Language)
+```
+
+```{r}
+library(dplyr)
+OTT_Select<- select(OTT,Language,Genre,IMDB.Score)
+head(OTT_Select)
+```
+```{r}
+RuntimeinHours<- (OTT$Runtime/60)
+head(RuntimeinHours)
+```
+
+
+```{r}
+OTT_Square <- OTT$IMDB.Score^2
+head(OTT_Square)
+```
+
+
+
+```{r}
+hist(OTT$IMDB.Score, main= "IMDB score Rating (plot of quantitative varaible)", xlab="IMDB score", ylab="Runtime", col="violet")
+```
+
+
+
+```{r}
+plot(OTT$IMDB.Score,OTT$Runtime, main= "scatterplot of IMDB score and runtime",xlab="IMDB score",ylab= "runtime", pch=16, col="red")
+
+```
+
+
+
+
