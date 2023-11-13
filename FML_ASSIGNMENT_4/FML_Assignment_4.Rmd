@@ -1,0 +1,218 @@
+---
+title: "FML_Assignment_4"
+author: "Sri Naga Dattu Gummadi"
+date: "2023-11-10"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+*** 
+## SUMMARY
+
+# Interpreting the clusters with respect to the numerical variables used in forming the clusters.
+
+Cluster 1 - 2, 18 (lowest Beta,lowest Asset_Turnover, Highest PE Ratio).
+
+Cluster 2 - 1,3,4,7,10,16,19,21 ( lowest Market_Cap,lowest Beta,lowest PE_Ratio,highest Leverage,highest Rev_Growth).
+
+Cluster 3 - 5, 9, 14, 20 (lowest PE_Ratio,highest ROE,lowest ROA,lowest Net_Profit_Margin, highest Rev_Growth).
+
+Cluster 4 - 11, 13, 15, 17 (Highest Market_Cap,ROE, ROA,Asset_Turnover Ratio and lowest Beta/PE Ratio).
+
+Cluster 5 - 6, 8, 12 (lowest Rev_Growth,highest Beta and levearge,lowest Net_Profit_Margin).
+
+
+# Ques) Is there a pattern in the clusters with respect to the numerical variables? (10 to 12) variables? (those n not utilized in the cluster formation).
+
+As per the graphs below, the interpretation is as follows:
+
+ Cluster 1: has the same hold and moderate buy medians and is spread out across the US, UK, and listed in NYSE.
+
+ Cluster 2 : In this cluster, which displays distinct Hold, Moderate Buy, a little increased Moderate Sell, and Strong Buy medians, the Hold median is the highest. They are from the US, the UK, and Switzerland and are traded on the NYSE.
+
+ Cluster 3: Exclusively listed on the NYSE, evenly distributed across the US and Canada, with medians of Moderate Hold and Moderate Buy.
+
+ Cluster 4: listed on the NYSE, has distinct counts for France, Ireland, and the US, and has medians for buy and sell orders that are equally Moderate.
+
+ Cluster 5 : Listed on AMEX, NASDAQ, and NYSE stock exchanges, all have an equal distribution of companies, but there is a clear Hold and Moderate Buy median as well as a different count between the US and Germany.
+
+
+# Question 3.
+# Provide an appropriate name for each cluster using any or all of the variables in the dataset.
+
+Based on certain criteria, preferably financial measures such as performance, potential for growth, or risk factors, Investors and analysts can use such clusters to make informed decisions about their investment strategies. We can name each cluster appropriately as follows:
+
+ Cluster 1 :- HOLD-BUY CLUSTER or Balanced Investment Cluster.
+ 
+ Cluster 2 :- HIGH HOLD CLUSTER or Robust Holding Cluster.
+ 
+ Cluster 3 :- HOLD-BUY CLUSTER or Balanced Investment Cluster.
+ 
+ Cluster 4 :- BUY-SELL CLUSTER or Dynamic Portfolio Cluster.
+ 
+ Cluster 5 :- HOLD CLUSTER or Stable Investment Cluster.
+
+
+***
+
+# Imporing the Pharmaceuticals dataset
+```{r}
+library(readr)
+pharmacts <- read.csv("/Users/srinagadattugummadi/Downloads/Pharmaceuticals.csv") 
+summary(pharmacts)
+str(pharmacts)
+```
+
+# Loading the packages 
+```{r}
+library(dplyr)
+library(caret)
+library(factoextra)
+library(tidyverse)
+library(cluster)
+library(gridExtra)
+```
+
+***
+
+# Question 1.
+# Cluster the 21 companies using only the numerical variables (1–9). Justify the numerous decisions taken throughout the cluster analysis, including the weights assigned to various variables, the particular clustering algorithm(s) utilized, the number of clusters created, and so on.
+
+# Removing the dataset's null values and choosing the monetary variables.
+```{r}
+colSums(is.na(pharmacts))
+row.names <- pharmacts[,1]
+pharmac_cl <- pharmacts[,3:11]
+head(pharmac_cl)
+```
+
+# scaling and normalization of the dataset.
+
+Normalization of the numerical variables is essential to guarantee that each variable contributes proportionately to the clustering process. Normalizing these variables helps avoid one variable from predominating the clustering based only on its magnitude because they may have different units or scales.
+
+```{r}
+pharmacts_scale <- scale(pharmac_cl)
+head(pharmacts_scale)
+cl_data <- as.data.frame(scale(pharmac_cl))
+```
+
+# Calculating K-means clustering for various centers, use a variety of K values, and comparing the results.
+
+Here,Selecting and prefering K-means over DBSCAN because it's frequently used in exploratory data analysis to find patterns and groups in the data, and because K-means clustering can reveal information about the financial profiles of pharmaceutical companies. DBSCAN is useful for datasets with dense areas and can help with investment analysis and strategic decision-making by revealing groups of companies with comparable financial features. It is also easily interpreted.  
+
+```{r}
+kmeans_1cl <- kmeans(pharmacts_scale, centers = 2, nstart = 30)
+kmeans_2cl<- kmeans(pharmacts_scale, centers = 5, nstart = 30)
+kmeans_3cl<- kmeans(pharmacts_scale, centers = 6, nstart = 30)
+
+Plot_1r<-fviz_cluster(kmeans_1cl, data = pharmacts_scale)+ggtitle("k=2")
+Plot_2r<-fviz_cluster(kmeans_2cl, data = pharmacts_scale)+ggtitle("k=5")
+Plot_3r<-fviz_cluster(kmeans_3cl, data = pharmacts_scale)+ggtitle("k=6")
+grid.arrange(Plot_1r,Plot_2r,Plot_3r, nrow = 3)
+```
+
+```{r}
+distance <- dist(pharmacts_scale, method = "euclidean")
+fviz_dist(distance)
+```
+
+# Estimating the  number of clusters.
+# Elbow Method is used in scaling the data to determine the K value.
+The elbow method is used to determine the optimal number of clusters (k) in a k-means clustering analysis.
+
+```{r}
+fviz_nbclust(cl_data, FUNcluster = kmeans, method = "wss") + labs(subtitle = "Elbow Method")
+```
+## It is evident that the output above displays that around 5 - 6 is the ideal value for k (slope stops being as steep)
+
+
+# The Silhouette Method is used in scaling the data to determine the number of clusters.
+Reason : The silhouette analysis calculates an object's degree of similarity to its own cluster in relation to other clusters. For various values of k, it offers a graphical depiction of the quality of clusters.
+
+```{r}
+fviz_nbclust(cl_data,FUNcluster = kmeans,method = "silhouette")+labs(subtitle="Silhouette Method")
+```
+
+# Final analysis and Extracting results using 5 clusters and Visualising the results.
+```{r}
+set.seed(555)
+final_Cl<- kmeans(pharmacts_scale, 5, nstart = 25)
+print(final_Cl)
+```
+
+
+```{r}
+clusplot(pharmacts_scale,final_Cl$cluster, color = TRUE, labels = 2,lines = 0)
+```
+
+***
+
+# Question 2.
+# Interpret the clusters with respect to the numerical variables used in forming the clusters.
+
+# Cluster 1 - 2, 18 (lowest Beta,lowest Asset_Turnover, Highest PE Ratio)
+# Cluster 2 - 1,3,4,7,10,16,19,21 ( lowest Market_Cap,lowest Beta,lowest PE_Ratio,highest Leverage,highest Rev_Growth.)
+# Cluster 3 - 5, 9, 14, 20 (lowest PE_Ratio,highest ROE,lowest ROA,lowest Net_Profit_Margin, highest Rev_Growth)
+# Cluster 4 - 11, 13, 15, 17 (Highest Market_Cap,ROE, ROA,Asset_Turnover Ratio and lowest Beta/PE Ratio)
+# Cluster 5 - 6, 8, 12 (lowest Rev_Growth,highest Beta and levearge,lowest Net_Profit_Margin)
+
+```{r}
+pcn_cluster <- pharmacts[,c(12,13,14)]%>% mutate(clusters = final_Cl$cluster)%>% arrange(clusters, ascending = TRUE)
+pcn_cluster
+```
+
+# Ques) Is there a pattern in the clusters with respect to the numerical variables? (10 to 12) variables? (those n not utilized in the cluster formation).
+
+```{r}
+plot1_nrc<-ggplot(pcn_cluster, mapping = aes(factor(clusters), fill=Median_Recommendation))+geom_bar(position = 'dodge')+labs(x ='No of clusters')
+plot2_nrc<- ggplot(pcn_cluster, mapping = aes(factor(clusters),fill = Location))+geom_bar(position = 'dodge')+labs(x ='No of clusters')
+plot3_nrc<- ggplot(pcn_cluster, mapping = aes(factor(clusters),fill = Exchange))+geom_bar(position = 'dodge')+labs(x ='No of clusters')
+grid.arrange(plot1_nrc, plot2_nrc, plot3_nrc)
+```
+## As per the graphs, the interpretation is as follows:
+
+# # Cluster 1: has the same hold and moderate buy medians and is spread out across the US, UK, and listed in NYSE.
+
+# # Cluster 2 : In this cluster, which displays distinct Hold, Moderate Buy, a little increased Moderate Sell, and Strong Buy medians, the Hold median is the highest. They are from the US, the UK, and Switzerland and are traded on the NYSE.
+
+# # Cluster 3: Exclusively listed on the NYSE, evenly distributed across the US and Canada, with medians of Moderate Hold and Moderate Buy.
+
+# # Cluster 4: listed on the NYSE, has distinct counts for France, Ireland, and the US, and has medians for buy and sell orders that are equally Moderate.
+
+# # Cluster 5 : Listed on AMEX, NASDAQ, and NYSE stock exchanges, all have an equal distribution of companies, but there is a clear Hold and Moderate Buy median as well as a different count between the US and Germany.
+
+
+# With respect to the median Recommendation Variable ,the clusters follow a particular pattern:
+# Cluster 2 and Cluster 5 has Hold Recommendation.
+# Cluster 1, Cluster 3 and Cluster 4 has moderate buy Recommendation.
+
+
+***
+
+# Question 3.
+# Provide an appropriate name for each cluster using any or all of the variables in the dataset.
+
+Based on certain criteria, preferably financial measures such as performance, potential for growth, or risk factors, Investors and analysts can use such clusters to make informed decisions about their investment strategies. We can name each cluster appropriately as follows:
+
+ Cluster 1 :- HOLD-BUY CLUSTER or Balanced Investment Cluster.
+ 
+ Cluster 2 :- HIGH HOLD CLUSTER or Robust Holding Cluster.
+ 
+ Cluster 3 :- HOLD-BUY CLUSTER or Balanced Investment Cluster.
+ 
+ Cluster 4 :- BUY-SELL CLUSTER or Dynamic Portfolio Cluster.
+ 
+ Cluster 5 :- HOLD CLUSTER or Stable Investment Cluster.
+
+
+
+
+
+
+
+
